@@ -25,6 +25,7 @@
 #define PIN_LCD_D7            32
 
 #define PIN_DHT               34
+#define PIN_SD_CHIPSELECT     53
 
 #define PIN_OUTLET_1          23
 #define PIN_OUTLET_2          25
@@ -38,7 +39,6 @@
 // includes
 #include <avr/wdt.h>
 #include <Wire.h> // used by RTClb (I2C?)
-
 #include "DHT.h"
 #include "RTClib.h"
 
@@ -144,7 +144,7 @@ void setup() {
   HEARTBEAT;
   wdt_enable(WDTO_2S); // 2 seconds
 
-  // TODO configure pins
+  // configure pins
   HEARTBEAT;
   pinMode(PIN_BUZZER, OUTPUT);
   pinMode(PIN_LIGHT_HEARTBEAT, OUTPUT);
@@ -162,13 +162,14 @@ void setup() {
   HEARTBEAT;
   Display::Init();
   Log::Init();
-  Log::LogString(Log::INFO, "BOOTING");
   if (!g_rtc.begin())
     FatalError("begin RTC error");
   delay(500); // come to our senses and get a sane time
   HEARTBEAT;
   g_now = g_rtc.now();
   Pumps::Init();
+  
+  Log::LogString(Log::INFO, "RESET");
 }
 
 void loop() {
