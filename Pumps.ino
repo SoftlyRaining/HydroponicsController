@@ -1,5 +1,5 @@
-#define HOUR (60L*60)
-#define DAY (HOUR*24)
+#define HOUR UINT32_C(3600)
+#define DAY UINT32_C(86400)
 
 /*static*/ bool Pumps::flooding;
 /*static*/ uint8_t Pumps::currentCycle;
@@ -13,24 +13,33 @@
   bool shouldStartAtSunrise = 24. / WATER_CYCLE_COUNT < (24 - LIGHT_HOURS);
 
   if (shouldStartAtSunrise) {
-    // TODO lighting should begin AND end with flooding. Currently lighting ends right when an extra flood cycle would begin (I think).
-    cycleDuration = HOUR * LIGHT_HOURS / WATER_CYCLE_COUNT;
+    // for the last flood if we want the pump to turn off at sunset, subtract PUMP_ON_MINUTES
+    uint32_t floodDayLength = HOUR * LIGHT_HOURS - PUMP_ON_MINUTES;
+    // for N floods during a day, there are N-1 intervals between floods
+    uint8_t daytimeWaitIntervals = WATER_CYCLE_COUNT - 1;
+    
+    cycleDuration = floodDayLength / daytimeWaitIntervals;
     firstCycleStart = HOUR * SUNRISE;
   } else {
     cycleDuration = DAY / WATER_CYCLE_COUNT;
     firstCycleStart = cycleDuration / 2; // center an ebb time period on midnight
   }
 
-  currentCycle = CalculateCycle();
+  currentCycle = CalculateCurrentCycle();
   nextStateChangeTime = CalculateNextFlood();
 }
 
-/*static*/ int Pumps::CalculateCycle() {
+/*static*/ int Pumps::CalculateCurrentCycle() {
   uint32_t daySeconds = g_now.unixtime() % DAY;
   if (daySeconds < firstCycleStart)
     return 0;
-  else
-    return (daySeconds - firstCycleStart) / cycleDuration;
+    
+   // for simplicity, I here assume cycle increments when flood begins, so at time firstCycleStart the cycle is 1.
+  int cycle = 1 + (daySeconds - firstCycleStart) / cycleDuration;
+
+  if (cycle > WATER_CYCLE_COUNT)
+    cycle = WATER_CYCLE_COUNT; // max cycle value
+  return cycle;
 }
 
 

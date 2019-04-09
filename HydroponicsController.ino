@@ -79,7 +79,7 @@ private:
   static void StartFlood();
   static void EndFlood();
 
-  static int CalculateCycle();
+  static int CalculateCurrentCycle();
   static uint32_t CalculateNextFlood();
 
   static bool flooding;
