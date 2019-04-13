@@ -2,56 +2,63 @@
 #define DAY UINT32_C(86400)
 
 /*static*/ bool Pumps::flooding;
-/*static*/ uint8_t Pumps::currentCycle;
-/*static*/ uint32_t Pumps::nextStateChangeTime;
-/*static*/ uint32_t Pumps::firstCycleStart; // time after midnight in seconds
-/*static*/ uint32_t Pumps::cycleDuration;
+
+class PumpSchedule {
+public:
+  PumpSchedule(uint8_t cycleCount, uint8_t pumpOutlet) :
+    pumpOutlet(pumpOutlet),
+    firstCycleStart(HOUR * SUNRISE), // might not be evenly spaced for long days and low # of cycles
+    cycleInterval((HOUR * LIGHT_HOURS - PUMP_ON_MINUTES) / (cycleCount - 1)),
+    cycleCount(cycleCount)
+  {
+    Update();
+  }
+
+  void Update() {
+    currentCycle = CalculateCurrentCycle;
+    nextCycleTimestamp = CalculateNextFlood();
+  }
+
+  uint8_t GetCycle() { return currentCycle; }
+  uint32_t GetNextCycleTime { return nextCycleTimestamp; }
+
+  const uint8_t pumpOutlet; // 1 based, as the hardware is labeled
+  const uint32_t firstCycleStart; // seconds after midnight
+  const uint32_t cycleInterval; // seconds
+  const uint8_t cycleCount;
+
+private:
+    uint8_t CalculateCurrentCycle() {
+    uint32_t daySeconds = g_now.unixtime() % DAY;
+    if (daySeconds < firstCycleStart)
+      return 0;
+      
+     // for simplicity, I here assume cycle increments when flood begins, so at time firstCycleStart the cycle is 1.
+    int cycle = 1 + (daySeconds - firstCycleStart) / cycleInterval;
+  
+    if (cycle > WATER_CYCLE_COUNT)
+      cycle = WATER_CYCLE_COUNT; // max cycle value
+    return cycle;
+  }
+  
+  uint32_t CalculateNextFlood() {
+    uint32_t nextFlood; // seconds after midnight
+    if (currentCycle < WATER_CYCLE_COUNT)
+      nextFlood = firstCycleStart + currentCycle * cycleInterval;
+    else
+      nextFlood = DAY + firstCycleStart;
+    
+    DateTime nowDay(g_now.year(), g_now.month(), g_now.day(), 0, 0, 0);
+    return nowDay.unixtime() + nextFlood;
+  }
+
+  uint8_t currentCycle;
+  uint32_t nextCycleTimestamp;
+};
 
 /*static*/ void Pumps::Init() {
   flooding = false;
-
-  bool shouldStartAtSunrise = 24. / WATER_CYCLE_COUNT < (24 - LIGHT_HOURS);
-
-  if (shouldStartAtSunrise) {
-    // for the last flood if we want the pump to turn off at sunset, subtract PUMP_ON_MINUTES
-    uint32_t floodDayLength = HOUR * LIGHT_HOURS - PUMP_ON_MINUTES;
-    // for N floods during a day, there are N-1 intervals between floods
-    uint8_t daytimeWaitIntervals = WATER_CYCLE_COUNT - 1;
-    
-    cycleDuration = floodDayLength / daytimeWaitIntervals;
-    firstCycleStart = HOUR * SUNRISE;
-  } else {
-    cycleDuration = DAY / WATER_CYCLE_COUNT;
-    firstCycleStart = cycleDuration / 2; // center an ebb time period on midnight
-  }
-
-  currentCycle = CalculateCurrentCycle();
-  nextStateChangeTime = CalculateNextFlood();
-}
-
-/*static*/ int Pumps::CalculateCurrentCycle() {
-  uint32_t daySeconds = g_now.unixtime() % DAY;
-  if (daySeconds < firstCycleStart)
-    return 0;
-    
-   // for simplicity, I here assume cycle increments when flood begins, so at time firstCycleStart the cycle is 1.
-  int cycle = 1 + (daySeconds - firstCycleStart) / cycleDuration;
-
-  if (cycle > WATER_CYCLE_COUNT)
-    cycle = WATER_CYCLE_COUNT; // max cycle value
-  return cycle;
-}
-
-
-/*static*/ uint32_t Pumps::CalculateNextFlood() {
-  uint32_t nextFlood; // seconds since midnight
-  if (currentCycle < WATER_CYCLE_COUNT)
-    nextFlood = firstCycleStart + currentCycle * cycleDuration;
-  else
-    nextFlood = DAY + firstCycleStart;
-  
-  DateTime floodTime(g_now.year(), g_now.month(), g_now.day(), 0, 0, 0);
-  return floodTime.unixtime() + nextFlood;
+  uint8_t deck
 }
 
 /*static*/ void Pumps::Poll() {
@@ -75,14 +82,6 @@
 
 /*static*/ bool Pumps::IsFloodingNow() {
   return flooding;
-}
-
-/*static*/ uint32_t Pumps::GetNextPumpEventTimestamp() {
-  return nextStateChangeTime;
-}
-
-/*static*/ int Pumps::GetFloodCycle() {
-  return currentCycle;
 }
 
 /*static*/ void Pumps::StartFlood() {

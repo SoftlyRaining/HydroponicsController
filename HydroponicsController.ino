@@ -72,22 +72,6 @@ public:
   static void Poll();
 
   static bool IsFloodingNow();
-  static int GetFloodCycle();
-  static uint32_t GetNextPumpEventTimestamp();
-
-private:
-  static void StartFlood();
-  static void EndFlood();
-
-  static int CalculateCurrentCycle();
-  static uint32_t CalculateNextFlood();
-
-  static bool flooding;
-  static uint8_t currentCycle;
-  static uint32_t nextStateChangeTime;
-  
-  static uint32_t firstCycleStart; // time after midnight in seconds
-  static uint32_t cycleDuration;
 };
 
 RTC_DS3231 g_rtc;
