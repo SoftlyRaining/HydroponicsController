@@ -26,7 +26,7 @@ bool lastSerialState = false;
 }
 
 /*static*/ void Log::LogString(Log::Level level, String message) {
-  static const char levelStrings[4][6] = {"FATAL ", "ERROR ", "WARN  ", "INFO  "};
+  static const char levelStrings[4][7] = {"FATAL ", "ERROR ", "WARN  ", "INFO  "};
 
   String date = String(g_now.year()) + "/" + String(g_now.month()) + "/" + String(g_now.day()) + " ";
   String time = String(g_now.hour()) + ":" + String(g_now.minute()) + ":" + String(g_now.second()) + " ";
