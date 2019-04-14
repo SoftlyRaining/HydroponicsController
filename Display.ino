@@ -49,12 +49,6 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
   g_lcd.createChar(0, customChar_waterDrop);
   g_lcd.createChar(1, customChar_drain);
   g_lcd.createChar(2, customChar_fill);
-
-  g_lcd.setCursor(0,0);
-  g_lcd.write(byte(0)); // water drop
-  g_lcd.print(" --:--:-- ");
-  g_lcd.setCursor(15,0);
-  g_lcd.write(byte(0)); // water drop
 }
 
 /*static*/ void Display::Poll() {
@@ -63,11 +57,8 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
   heartbeatLightState = !heartbeatLightState;
   digitalWrite(PIN_LIGHT_HEARTBEAT, heartbeatLightState ? HIGH : LOW);
   
-  // update LCD when clock seconds change
-  static uint8_t lastSecond = 0;
-  if (g_now.second() != lastSecond)
-    Update();
-  lastSecond = g_now.second();
+  // update LCD always
+  Update();
 }
 
 /*static*/ void Display::ShowError(const char* message) {
@@ -82,33 +73,32 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
 
   /*
    |      |       |  (measures 16 characters)
-   * HH:MM:SS W## *   duration, watering or draining, cycle index
+   HH:MM*#  HH:MM*#  tray1 next flood, tray 1 flood index, tray2 next flood, tray2 flood index
      HH:MM ##% ##C   clock, humidity, temp
    */
 
-   uint32_t secondsToNextPumpEvent = Pumps::GetNextPumpEventTimestamp() - g_now.unixtime();
-   uint8_t seconds = secondsToNextPumpEvent % 60;
-   secondsToNextPumpEvent /= 60;
-   uint8_t minutes = secondsToNextPumpEvent % 60;
-   secondsToNextPumpEvent /= 60;
-   uint8_t hours = secondsToNextPumpEvent % 100; // truncate to 2 digits
+  DateTime nextEvent;
+  g_lcd.setCursor(0,0);
 
-  g_lcd.setCursor(2,0);
-  if (hours < 10) g_lcd.print('0');
-  g_lcd.print(hours, DEC);
-  
-  g_lcd.setCursor(5,0);
-  if (minutes < 10) g_lcd.print('0');
-  g_lcd.print(minutes, DEC);
-  
-  g_lcd.setCursor(8,0);
-  if (seconds < 10) g_lcd.print('0');
-  g_lcd.print(seconds, DEC);
+  nextEvent = DateTime(Pumps::GetNextEvent(0));
+  if (nextEvent.hour() < 10) g_lcd.print('0');
+  g_lcd.print(nextEvent.hour(), DEC);
+  g_lcd.print(':');
+  if (nextEvent.minute() < 10) g_lcd.print('0');
+  g_lcd.print(nextEvent.minute(), DEC);
+  g_lcd.write(byte(0)); // water drop
+  g_lcd.print(Pumps::GetCurrentCycle(0));
 
-  g_lcd.setCursor(11,0);
-  g_lcd.write(byte(Pumps::IsFloodingNow() ? 2 : 1)); // fill / drain characters
-  if (Pumps::GetFloodCycle() < 10) g_lcd.print('0');
-  g_lcd.print(Pumps::GetFloodCycle(), DEC);
+  g_lcd.print("  ");
+
+  nextEvent = DateTime(Pumps::GetNextEvent(1));
+  if (nextEvent.hour() < 10) g_lcd.print('0');
+  g_lcd.print(nextEvent.hour(), DEC);
+  g_lcd.print(':');
+  if (nextEvent.minute() < 10) g_lcd.print('0');
+  g_lcd.print(nextEvent.minute(), DEC);
+  g_lcd.write(byte(0)); // water drop
+  g_lcd.print(Pumps::GetCurrentCycle(1));
   
   g_lcd.setCursor(2,1);
   if (g_now.hour() < 10) g_lcd.print('0');

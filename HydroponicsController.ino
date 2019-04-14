@@ -1,16 +1,18 @@
+#define MINUTE UINT32_C(60)
+#define HOUR UINT32_C(3600)
+#define DAY UINT32_C(86400)
+
 // configuration
+//#define SCHEDULE_TEST // if defined, the clock will be greatly sped up
+
 #define LIGHT_HOURS 14
 #define SOLAR_NOON 13 // 1300 / 1pm (center of 9-5 working day)
 #define SUNRISE (SOLAR_NOON - LIGHT_HOURS/2) // ignoring underflow risk
 #define SUNSET (SUNRISE + LIGHT_HOURS)
 
-#define WATER_CYCLE_COUNT 5 // number of floods per day. These are spaced out during the "daytime" period
-#define PUMP_ON_MINUTES 15 // number of minutes to turn on pump for each flood
-
 #define LOG_INTERVAL_MINUTES 5
 
 #define LIGHT_OUTLET  1
-#define PUMP_OUTLET   2
 
 // pinout definitions
 #define PIN_BUZZER            2
@@ -71,7 +73,8 @@ public:
   static void Init();
   static void Poll();
 
-  static bool IsFloodingNow();
+  static uint8_t GetCurrentCycle(uint8_t index);
+  static uint32_t GetNextEvent(uint8_t index);
 };
 
 RTC_DS3231 g_rtc;
@@ -98,18 +101,19 @@ void PollLights() {
     if (hour < SUNRISE || hour >= SUNSET) {
       lightsOn = false;
       Log::LogString(Log::INFO, "Sunset");
+      SetOutlet(LIGHT_OUTLET, lightsOn);
     }
   } else {
     if (hour >= SUNRISE && hour < SUNSET) {
       lightsOn = true;
       Log::LogString(Log::INFO, "Sunrise");
+      SetOutlet(LIGHT_OUTLET, lightsOn);
     }
   }
-  
-  SetOutlet(LIGHT_OUTLET, lightsOn);
 }
 
 void SetOutlet(int number, bool on) {
+  Log::LogString(Log::INFO, "Setting outlet " + String(number) + " = " + String(on));
   static const int pinMap[8] = {
     PIN_OUTLET_1,
     PIN_OUTLET_2,
@@ -153,14 +157,21 @@ void setup() {
   g_now = g_rtc.now();
   Pumps::Init();
   
-  Log::LogString(Log::INFO, "RESET");
+  Log::LogString(Log::WARN, "RESET");
+#ifdef SCHEDULE_TEST
+  Log::LogString(Log::WARN, "Schedule test enabled.");
+#endif
 }
 
 void loop() {
   HEARTBEAT;
 
   // update clock time
+#ifdef SCHEDULE_TEST
+  g_now = g_now + TimeSpan(MINUTE); // fast forward - one minute per tick
+#else  
   g_now = g_rtc.now();
+#endif
   
   PollSensorState();
   

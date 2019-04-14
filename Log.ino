@@ -15,7 +15,7 @@ bool lastSerialState = false;
 
   uint32_t unixTime = g_now.unixtime();
   if (unixTime >= nextLogTime) {
-    nextLogTime = unixTime + LOG_INTERVAL_MINUTES * 60;
+    nextLogTime = unixTime + LOG_INTERVAL_MINUTES * MINUTE;
     Update();
   }
 }
@@ -26,23 +26,27 @@ bool lastSerialState = false;
 }
 
 /*static*/ void Log::LogString(Log::Level level, String message) {
-  static const char levelStrings[4][6] = {"FATAL", "ERROR", "WARN ", "INFO "};
+  static const char levelStrings[4][6] = {"FATAL ", "ERROR ", "WARN  ", "INFO  "};
 
-  String taggedMessage = String(levelStrings[level]) + " ";
-  taggedMessage += String(g_now.year()) + "/" + String(g_now.month()) + "/" + String(g_now.day()) + " ";
-  taggedMessage += String(g_now.hour()) + ":" + String(g_now.minute()) + ":" + String(g_now.second()) + " ";
-  taggedMessage += message;
+  String date = String(g_now.year()) + "/" + String(g_now.month()) + "/" + String(g_now.day()) + " ";
+  String time = String(g_now.hour()) + ":" + String(g_now.minute()) + ":" + String(g_now.second()) + " ";
   
-  if (Serial)
-    Serial.println(taggedMessage);
+  if (Serial) {
+    Serial.print(levelStrings[level]);
+    Serial.print(date);
+    Serial.print(time);
+    Serial.println(message);
+  }
   
   File logFile = SD.open("log.txt", FILE_WRITE);
   if (!logFile) {
     Serial.println("error opening log on SD");
     Display::ShowError("SD log error"); // TODO this junks up the display when execution continues b/c normal display doesn't use clear. On the bright side, you can tell it happened even hours later...
-  }
-  if (logFile) {
-    logFile.println(taggedMessage);
+  } else {
+    logFile.print(levelStrings[level]);
+    logFile.print(date);
+    logFile.print(time);
+    logFile.println(message);
     logFile.close();
   }
 }
