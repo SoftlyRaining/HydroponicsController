@@ -58,14 +58,17 @@ private:
 
 class Log {
 public:
-  enum Level { FATAL, ERROR, WARN, INFO };
+  enum Level { INFO, WARN, ERROR, FATAL };
 
   static void Init();
   static void Poll();
   static void LogString(Level level, String message);
+  static bool HaveSeenError() { return errorSeen; }
   
 private:
   static void Update();
+
+  static bool errorSeen;
 };
 
 class Pumps {

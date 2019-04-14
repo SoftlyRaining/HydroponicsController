@@ -2,6 +2,7 @@
 #include <SD.h>
 
 bool lastSerialState = false;
+bool Log::errorSeen = false;
 
 /*static*/ void Log::Init() {
   Serial.begin(9600);
@@ -26,8 +27,9 @@ bool lastSerialState = false;
 }
 
 /*static*/ void Log::LogString(Log::Level level, String message) {
-  static const char levelStrings[4][7] = {"FATAL ", "ERROR ", "WARN  ", "INFO  "};
-
+  Log::errorSeen |= (level >= ERROR);
+  
+  static const char levelStrings[4][7] = {"INFO  ", "WARN  ", "ERROR ", "FATAL "};
   String date = String(g_now.year()) + "/" + String(g_now.month()) + "/" + String(g_now.day()) + " ";
   String time = String(g_now.hour()) + ":" + String(g_now.minute()) + ":" + String(g_now.second()) + " ";
   

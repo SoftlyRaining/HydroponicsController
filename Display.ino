@@ -59,6 +59,9 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
   static bool heartbeatLightState = false;
   heartbeatLightState = !heartbeatLightState;
   digitalWrite(PIN_LIGHT_HEARTBEAT, heartbeatLightState ? HIGH : LOW);
+
+  // update check engine light
+  digitalWrite(PIN_LIGHT_ALARM, Log::HaveSeenError() ? HIGH : LOW);
   
   // update LCD always
   Update();
