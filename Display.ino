@@ -45,7 +45,10 @@ byte customChar_fill[] = {
 LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, PIN_LCD_D7);
 
 /*static*/ void Display::Init() {
+  // 16x2 display area
   g_lcd.begin(16, 2);
+  
+  // up to 8 custom characters, 5x8
   g_lcd.createChar(0, customChar_waterDrop);
   g_lcd.createChar(1, customChar_drain);
   g_lcd.createChar(2, customChar_fill);
@@ -68,39 +71,29 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
 
 // actually writes to LCD
 /*static*/ void Display::Update() {
-  // 16x2 display area
-  // up to 8 custom characters, 5x8
-
   /*
    |      |       |  (measures 16 characters)
    HH:MM*#  HH:MM*#  tray1 next flood, tray 1 flood index, tray2 next flood, tray2 flood index
      HH:MM ##% ##C   clock, humidity, temp
    */
 
-  DateTime nextEvent;
+  auto DisplayTrayInfo = [](uint8_t trayIndex) {
+    DateTime nextEvent = DateTime(Pumps::GetNextEvent(trayIndex));
+    if (nextEvent.hour() < 10) g_lcd.print('0');
+    g_lcd.print(nextEvent.hour(), DEC);
+    g_lcd.print(':');
+    if (nextEvent.minute() < 10) g_lcd.print('0');
+    g_lcd.print(nextEvent.minute(), DEC);
+    g_lcd.write(byte(0)); // water drop
+    g_lcd.print(Pumps::GetCurrentCycle(trayIndex));
+  };
+
   g_lcd.setCursor(0,0);
-
-  nextEvent = DateTime(Pumps::GetNextEvent(0));
-  if (nextEvent.hour() < 10) g_lcd.print('0');
-  g_lcd.print(nextEvent.hour(), DEC);
-  g_lcd.print(':');
-  if (nextEvent.minute() < 10) g_lcd.print('0');
-  g_lcd.print(nextEvent.minute(), DEC);
-  g_lcd.write(byte(0)); // water drop
-  g_lcd.print(Pumps::GetCurrentCycle(0));
-
+  DisplayTrayInfo(0);
   g_lcd.print("  ");
-
-  nextEvent = DateTime(Pumps::GetNextEvent(1));
-  if (nextEvent.hour() < 10) g_lcd.print('0');
-  g_lcd.print(nextEvent.hour(), DEC);
-  g_lcd.print(':');
-  if (nextEvent.minute() < 10) g_lcd.print('0');
-  g_lcd.print(nextEvent.minute(), DEC);
-  g_lcd.write(byte(0)); // water drop
-  g_lcd.print(Pumps::GetCurrentCycle(1));
+  DisplayTrayInfo(1);
   
-  g_lcd.setCursor(2,1);
+  g_lcd.setCursor(0,1);
   if (g_now.hour() < 10) g_lcd.print('0');
   g_lcd.print(g_now.hour(), DEC);
   g_lcd.print(':');
