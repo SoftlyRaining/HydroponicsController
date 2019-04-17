@@ -29,14 +29,14 @@
 #define PIN_DHT               34
 #define PIN_SD_CHIPSELECT     53
 
-#define PIN_OUTLET_1          23
-#define PIN_OUTLET_2          25
-#define PIN_OUTLET_3          27
-#define PIN_OUTLET_4          29
-#define PIN_OUTLET_5          31
-#define PIN_OUTLET_6          33
-#define PIN_OUTLET_7          35
-#define PIN_OUTLET_8          37
+#define PIN_OUTLET_1          37
+#define PIN_OUTLET_2          35
+#define PIN_OUTLET_3          33
+#define PIN_OUTLET_4          31
+#define PIN_OUTLET_5          29
+#define PIN_OUTLET_6          27
+#define PIN_OUTLET_7          25
+#define PIN_OUTLET_8          23
 
 // includes
 #include <avr/wdt.h>
@@ -91,7 +91,7 @@ float g_airHumidity;
 void PollSensorState() {
   // TODO update sensors: water temp, water EC, water pH, water level (x4), soil humidity (x3)
 
-  // TODO each DHT call takes ~250ms - too long for every tick?
+  // DHT updates about once every 2 seconds, and update takes 250ms. (otherwise it does nothing, seemingly)
   g_airTemp = g_dht.readTemperature();
   g_airHumidity = g_dht.readHumidity();
 }
@@ -127,7 +127,7 @@ void SetOutlet(int number, bool on) {
     PIN_OUTLET_7,
     PIN_OUTLET_8,
   };
-  digitalWrite(pinMap[number-1], on ? HIGH : LOW);
+  digitalWrite(pinMap[number-1], on ? LOW : HIGH);
 }
 
 void setup() {
@@ -148,6 +148,24 @@ void setup() {
   pinMode(PIN_OUTLET_6, OUTPUT);
   pinMode(PIN_OUTLET_7, OUTPUT);
   pinMode(PIN_OUTLET_8, OUTPUT);
+
+  digitalWrite(PIN_OUTLET_1, HIGH); // high means relay off
+  digitalWrite(PIN_OUTLET_2, HIGH);
+  digitalWrite(PIN_OUTLET_3, HIGH);
+  digitalWrite(PIN_OUTLET_4, HIGH);
+  digitalWrite(PIN_OUTLET_5, HIGH);
+  digitalWrite(PIN_OUTLET_6, HIGH);
+  digitalWrite(PIN_OUTLET_7, HIGH);
+  digitalWrite(PIN_OUTLET_8, HIGH);
+
+  // lamp test (briefly illuminate all to ensure they're connected and functioning)
+  digitalWrite(PIN_BUZZER, LOW);
+  digitalWrite(PIN_LIGHT_HEARTBEAT, LOW);
+  digitalWrite(PIN_LIGHT_ALARM, HIGH);
+  delay(250);
+  digitalWrite(PIN_BUZZER, LOW);
+  digitalWrite(PIN_LIGHT_HEARTBEAT, LOW);
+  digitalWrite(PIN_LIGHT_ALARM, LOW);
 
   // initialize hardware, modules
   HEARTBEAT;
