@@ -58,7 +58,7 @@ private:
 
 class Log {
 public:
-  enum Level { INFO, WARN, ERROR, FATAL };
+  enum Level { info, warn, error, fatal };
 
   static void init();
   static void poll();
@@ -103,20 +103,20 @@ void pollLights() {
   if (lightsOn) {
     if (hour < SUNRISE || hour >= SUNSET) {
       lightsOn = false;
-      Log::logString(Log::INFO, "Sunset");
+      Log::logString(Log::info, "Sunset");
       setOutlet(LIGHT_OUTLET, lightsOn);
     }
   } else {
     if (hour >= SUNRISE && hour < SUNSET) {
       lightsOn = true;
-      Log::logString(Log::INFO, "Sunrise");
+      Log::logString(Log::info, "Sunrise");
       setOutlet(LIGHT_OUTLET, lightsOn);
     }
   }
 }
 
 void setOutlet(int number, bool on) {
-  Log::logString(Log::INFO, "Setting outlet " + String(number) + " = " + String(on));
+  Log::logString(Log::info, "Setting outlet " + String(number) + " = " + String(on));
   static const int pinMap[8] = {
     PIN_OUTLET_1,
     PIN_OUTLET_2,
@@ -178,9 +178,9 @@ void setup() {
   g_now = g_rtc.now();
   Pumps::init();
   
-  Log::logString(Log::WARN, "RESET");
+  Log::logString(Log::warn, "RESET");
 #ifdef SCHEDULE_TEST
-  Log::logString(Log::WARN, "Schedule test enabled.");
+  Log::logString(Log::warn, "Schedule test enabled.");
 #endif
 }
 
@@ -210,7 +210,7 @@ void fatalError(const char* message) {
   digitalWrite(PIN_BUZZER, HIGH);
   digitalWrite(PIN_LIGHT_ALARM, HIGH);
   
-  Log::logString(Log::FATAL, message);
+  Log::logString(Log::fatal, message);
   Display::showError(message); // display error on LCD
 
   // wait for watchdog to reset us (no heartbeat!) while drawing attention

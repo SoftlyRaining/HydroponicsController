@@ -77,10 +77,10 @@ void updateSchedulesAtMidnight() {
 }
 
 enum State {
-  Wait,
-  Flood,
-  Drain,
-  StateCount
+  wait,
+  flood,
+  drain,
+  stateCount
 };
   
 /*static*/ void Pumps::poll() {
@@ -88,17 +88,17 @@ enum State {
   
   // timed state changes
   static uint32_t stateChangeTime = 0;
-  static State currentState = Wait - 1;
+  static State currentState = wait - 1; // state changes immediately - will be incremented back to "wait" as first effective state // TODO refactor: this is crappy and un-obvious
   static PumpSchedule* currentSchedule = NULL;
   
   if (g_now.unixtime() < stateChangeTime)
     return;
   
-  currentState = (currentState + 1) % StateCount;
+  currentState = (currentState + 1) % stateCount;
   
   switch (currentState) {
-    case Wait:
-      Log::logString(Log::INFO, "Pump State: Wait");
+    case wait:
+      Log::logString(Log::info, "Pump State: Wait");
       if (currentSchedule)
         currentSchedule->update(); // only update the tray that just got flooded
       stateChangeTime = -1; // max uint value
@@ -110,14 +110,14 @@ enum State {
       }
       break;
       
-    case Flood:
-      Log::logString(Log::INFO, "Pump State: Flood #" + String(currentSchedule->id));
+    case flood:
+      Log::logString(Log::info, "Pump State: Flood #" + String(currentSchedule->id));
       setOutlet(currentSchedule->pumpOutlet, true);
       stateChangeTime = g_now.unixtime() + currentSchedule->floodMinutes * MINUTE;
       break;
       
-    case Drain:
-      Log::logString(Log::INFO, "Pump State: Drain #" + String(currentSchedule->id));
+    case drain:
+      Log::logString(Log::info, "Pump State: Drain #" + String(currentSchedule->id));
       setOutlet(currentSchedule->pumpOutlet, false);
       stateChangeTime = g_now.unixtime() + currentSchedule->drainMinutes * MINUTE;
       break;

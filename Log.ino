@@ -23,11 +23,11 @@ bool Log::errorSeen = false;
 
 /*static*/ void Log::update() {
   String message = "Humidity: " + String(g_airHumidity, 0) + "% Temp:" + String(g_airTemp, 0) + "C";
-  logString(Log::INFO, message);
+  logString(Log::info, message);
 }
 
 /*static*/ void Log::logString(Log::Level level, String message) {
-  Log::errorSeen |= (level >= ERROR);
+  Log::errorSeen |= (level >= error);
   
   static const char levelStrings[4][7] = {"INFO  ", "WARN  ", "ERROR ", "FATAL "};
   String date = String(g_now.year()) + "/" + String(g_now.month()) + "/" + String(g_now.day()) + " ";
