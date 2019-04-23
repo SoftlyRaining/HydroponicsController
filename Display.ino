@@ -80,15 +80,15 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
      HH:MM ##% ##C   clock, humidity, temp
    */
 
-  auto displayTrayInfo = [](uint8_t trayIndex) {
-    DateTime nextEvent = DateTime(Pumps::getNextEvent(trayIndex));
+  auto displayTrayInfo = [](uint8_t deckIndex) {
+    DateTime nextEvent = DateTime(Pumps::getNextEvent(deckIndex));
     if (nextEvent.hour() < 10) g_lcd.print('0');
     g_lcd.print(nextEvent.hour(), DEC);
     g_lcd.print(':');
     if (nextEvent.minute() < 10) g_lcd.print('0');
     g_lcd.print(nextEvent.minute(), DEC);
     g_lcd.write(byte(0)); // water drop
-    g_lcd.print(Pumps::getCurrentCycle(trayIndex));
+    g_lcd.print(Pumps::getCurrentCycle(deckIndex));
   };
 
   g_lcd.setCursor(0,0);

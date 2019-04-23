@@ -5,14 +5,34 @@
 // configuration
 //#define SCHEDULE_TEST // if defined, the clock will be greatly sped up
 
+struct Deck {
+  const int id;
+  
+  const int lightOutlet;
+  const int pumpOutlet;
+  
+  const uint32_t lightDuration; // seconds
+  const uint32_t sunriseTime; // seconds after midnight
+  const uint8_t floodCycles;
+
+  const uint8_t floodMinutes;
+  const uint8_t drainMinutes;
+};
+
+static const Deck g_deckList[] = {
+  {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 6 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
+  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 6 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
+};
+static_assert(sizeof(g_deckList) > 0, "Must have at least one deck");
+
+// TODO refactor for multiple decks
 #define LIGHT_HOURS 14
 #define SOLAR_NOON 13 // 1300 / 1pm (center of 9-5 working day)
 #define SUNRISE (SOLAR_NOON - LIGHT_HOURS/2) // ignoring underflow risk
 #define SUNSET (SUNRISE + LIGHT_HOURS)
+#define LIGHT_OUTLET  1
 
 #define LOG_INTERVAL_MINUTES 5
-
-#define LIGHT_OUTLET  1
 
 // pinout definitions
 #define PIN_BUZZER            2
@@ -71,6 +91,7 @@ private:
   static bool errorSeen;
 };
 
+class PumpSchedule; // for some reason this needs to be here for stuff in Pumps.ino to work??
 class Pumps {
 public:
   static void init();
