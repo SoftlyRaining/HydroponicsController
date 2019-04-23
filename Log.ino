@@ -4,29 +4,29 @@
 bool lastSerialState = false;
 bool Log::errorSeen = false;
 
-/*static*/ void Log::Init() {
+/*static*/ void Log::init() {
   Serial.begin(9600);
 
   if (!SD.begin(PIN_SD_CHIPSELECT))
-    FatalError("SD card fail");
+    fatalError("SD card fail");
 }
 
-/*static*/ void Log::Poll() {
-  static uint32_t nextLogTime = g_now.unixtime() + 5; // wait a few seconds after boot to have sane sensor data
+/*static*/ void Log::poll() {
+  static uint32_t nextLogTime = g_now.unixtime() + 5; // begin a few seconds after boot to have sane sensor data
 
   uint32_t unixTime = g_now.unixtime();
   if (unixTime >= nextLogTime) {
     nextLogTime = unixTime + LOG_INTERVAL_MINUTES * MINUTE;
-    Update();
+    update();
   }
 }
 
-/*static*/ void Log::Update() {
+/*static*/ void Log::update() {
   String message = "Humidity: " + String(g_airHumidity, 0) + "% Temp:" + String(g_airTemp, 0) + "C";
-  LogString(Log::INFO, message);
+  logString(Log::INFO, message);
 }
 
-/*static*/ void Log::LogString(Log::Level level, String message) {
+/*static*/ void Log::logString(Log::Level level, String message) {
   Log::errorSeen |= (level >= ERROR);
   
   static const char levelStrings[4][7] = {"INFO  ", "WARN  ", "ERROR ", "FATAL "};
@@ -43,7 +43,7 @@ bool Log::errorSeen = false;
   File logFile = SD.open("log.txt", FILE_WRITE);
   if (!logFile) {
     Serial.println("error opening log on SD");
-    Display::ShowError("SD log error"); // TODO this junks up the display when execution continues b/c normal display doesn't use clear. On the bright side, you can tell it happened even hours later...
+    Display::showError("SD log error"); // TODO this junks up the display when execution continues b/c normal display doesn't use clear. On the bright side, you can tell it happened even hours later...
   } else {
     logFile.print(levelStrings[level]);
     logFile.print(date);

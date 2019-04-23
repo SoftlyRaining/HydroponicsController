@@ -11,13 +11,13 @@ public:
   {
   }
 
-  void Update() {
-    currentCycle = CalculateCurrentCycle();
-    nextCycleTimestamp = CalculateNextFlood();
+  void update() {
+    currentCycle = calculateCurrentCycle();
+    nextCycleTimestamp = calculateNextFlood();
   }
 
-  uint8_t GetCycle() { return currentCycle; }
-  uint32_t GetNextCycleTime() { return nextCycleTimestamp; }
+  uint8_t getCycle() { return currentCycle; }
+  uint32_t getNextCycleTime() { return nextCycleTimestamp; }
 
   const uint8_t id;
   const uint8_t cycleCount;
@@ -28,7 +28,7 @@ public:
   const uint32_t cycleInterval; // seconds
 
 private:
-    uint8_t CalculateCurrentCycle() {
+    uint8_t calculateCurrentCycle() {
     uint32_t daySeconds = g_now.unixtime() % DAY;
     if (daySeconds < firstCycleStart)
       return 0;
@@ -41,7 +41,7 @@ private:
     return cycle;
   }
   
-  uint32_t CalculateNextFlood() {
+  uint32_t calculateNextFlood() {
     uint32_t nextFlood; // seconds after midnight
     if (currentCycle < cycleCount)
       nextFlood = firstCycleStart + currentCycle * cycleInterval;
@@ -61,18 +61,18 @@ static PumpSchedule PumpSchedules[] = {
   {2 /*id*/, 4 /*cycleCount*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/, 4 /*pumpOutlet*/},
 };
 
-/*static*/ void Pumps::Init() {
-  for (PumpSchedule& ps: PumpSchedules)
-    ps.Update();
+/*static*/ void Pumps::init() {
+  for (PumpSchedule& schedule: PumpSchedules)
+    schedule.update();
 }
 
-void UpdateSchedulesAtMidnight() {
-  // reset cycle count each day at midnight
+void updateSchedulesAtMidnight() {
+  // resets cycle count each day at midnight
   static uint8_t prevDay = g_now.day();
   if (g_now.day() != prevDay) {
     prevDay = g_now.day();
-    for (PumpSchedule& ps: PumpSchedules)
-      ps.Update();
+    for (PumpSchedule& schedule: PumpSchedules)
+      schedule.update();
   }
 }
 
@@ -83,8 +83,8 @@ enum State {
   StateCount
 };
   
-/*static*/ void Pumps::Poll() {
-  UpdateSchedulesAtMidnight();
+/*static*/ void Pumps::poll() {
+  updateSchedulesAtMidnight();
   
   // timed state changes
   static uint32_t stateChangeTime = 0;
@@ -98,34 +98,34 @@ enum State {
   
   switch (currentState) {
     case Wait:
-      Log::LogString(Log::INFO, "Pump State: Wait");
+      Log::logString(Log::INFO, "Pump State: Wait");
       if (currentSchedule)
-        currentSchedule->Update(); // only update the tray that just got flooded
+        currentSchedule->update(); // only update the tray that just got flooded
       stateChangeTime = -1; // max uint value
       for (PumpSchedule& ps: PumpSchedules) {
-        if (ps.GetNextCycleTime() < stateChangeTime) {
-          stateChangeTime = ps.GetNextCycleTime();
+        if (ps.getNextCycleTime() < stateChangeTime) {
+          stateChangeTime = ps.getNextCycleTime();
           currentSchedule = &ps;
         }
       }
       break;
       
     case Flood:
-      Log::LogString(Log::INFO, "Pump State: Flood #" + String(currentSchedule->id));
-      SetOutlet(currentSchedule->pumpOutlet, true);
+      Log::logString(Log::INFO, "Pump State: Flood #" + String(currentSchedule->id));
+      setOutlet(currentSchedule->pumpOutlet, true);
       stateChangeTime = g_now.unixtime() + currentSchedule->floodMinutes * MINUTE;
       break;
       
     case Drain:
-      Log::LogString(Log::INFO, "Pump State: Drain #" + String(currentSchedule->id));
-      SetOutlet(currentSchedule->pumpOutlet, false);
+      Log::logString(Log::INFO, "Pump State: Drain #" + String(currentSchedule->id));
+      setOutlet(currentSchedule->pumpOutlet, false);
       stateChangeTime = g_now.unixtime() + currentSchedule->drainMinutes * MINUTE;
       break;
       
     default:
-      FatalError("pump state");
+      fatalError("pump state");
   }
 }
 
-/*static*/ uint8_t Pumps::GetCurrentCycle(uint8_t index) { return PumpSchedules[index].GetCycle(); }
-/*static*/ uint32_t Pumps::GetNextEvent(uint8_t index) { return PumpSchedules[index].GetNextCycleTime(); }
+/*static*/ uint8_t Pumps::getCurrentCycle(uint8_t index) { return PumpSchedules[index].getCycle(); }
+/*static*/ uint32_t Pumps::getNextEvent(uint8_t index) { return PumpSchedules[index].getNextCycleTime(); }

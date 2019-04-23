@@ -48,36 +48,36 @@
 
 class Display {
 public:
-  static void Init();
-  static void Poll();
-  static void ShowError(const char* message);
+  static void init();
+  static void poll();
+  static void showError(const char* message);
   
 private:
-  static void Update();
+  static void update();
 };
 
 class Log {
 public:
   enum Level { INFO, WARN, ERROR, FATAL };
 
-  static void Init();
-  static void Poll();
-  static void LogString(Level level, String message);
-  static bool HaveSeenError() { return errorSeen; }
+  static void init();
+  static void poll();
+  static void logString(Level level, String message);
+  static bool haveSeenError() { return errorSeen; }
   
 private:
-  static void Update();
+  static void update();
 
   static bool errorSeen;
 };
 
 class Pumps {
 public:
-  static void Init();
-  static void Poll();
+  static void init();
+  static void poll();
 
-  static uint8_t GetCurrentCycle(uint8_t index);
-  static uint32_t GetNextEvent(uint8_t index);
+  static uint8_t getCurrentCycle(uint8_t index);
+  static uint32_t getNextEvent(uint8_t index);
 };
 
 RTC_DS3231 g_rtc;
@@ -88,7 +88,7 @@ DateTime g_now;
 float g_airTemp;
 float g_airHumidity;
 
-void PollSensorState() {
+void pollSensorState() {
   // TODO update sensors: water temp, water EC, water pH, water level (x4), soil humidity (x3)
 
   // DHT updates about once every 2 seconds, and update takes 250ms. (otherwise it does nothing, seemingly)
@@ -96,27 +96,27 @@ void PollSensorState() {
   g_airHumidity = g_dht.readHumidity();
 }
 
-void PollLights() {
+void pollLights() {
   static bool lightsOn = false;
 
   uint8_t hour = g_now.hour();
   if (lightsOn) {
     if (hour < SUNRISE || hour >= SUNSET) {
       lightsOn = false;
-      Log::LogString(Log::INFO, "Sunset");
-      SetOutlet(LIGHT_OUTLET, lightsOn);
+      Log::logString(Log::INFO, "Sunset");
+      setOutlet(LIGHT_OUTLET, lightsOn);
     }
   } else {
     if (hour >= SUNRISE && hour < SUNSET) {
       lightsOn = true;
-      Log::LogString(Log::INFO, "Sunrise");
-      SetOutlet(LIGHT_OUTLET, lightsOn);
+      Log::logString(Log::INFO, "Sunrise");
+      setOutlet(LIGHT_OUTLET, lightsOn);
     }
   }
 }
 
-void SetOutlet(int number, bool on) {
-  Log::LogString(Log::INFO, "Setting outlet " + String(number) + " = " + String(on));
+void setOutlet(int number, bool on) {
+  Log::logString(Log::INFO, "Setting outlet " + String(number) + " = " + String(on));
   static const int pinMap[8] = {
     PIN_OUTLET_1,
     PIN_OUTLET_2,
@@ -169,18 +169,18 @@ void setup() {
 
   // initialize hardware, modules
   HEARTBEAT;
-  Display::Init();
-  Log::Init();
+  Display::init();
+  Log::init();
   if (!g_rtc.begin())
-    FatalError("begin RTC error");
+    fatalError("begin RTC error");
   delay(500); // come to our senses and get a sane time
   HEARTBEAT;
   g_now = g_rtc.now();
-  Pumps::Init();
+  Pumps::init();
   
-  Log::LogString(Log::WARN, "RESET");
+  Log::logString(Log::WARN, "RESET");
 #ifdef SCHEDULE_TEST
-  Log::LogString(Log::WARN, "Schedule test enabled.");
+  Log::logString(Log::WARN, "Schedule test enabled.");
 #endif
 }
 
@@ -194,24 +194,24 @@ void loop() {
   g_now = g_rtc.now();
 #endif
   
-  PollSensorState();
+  pollSensorState();
   
-  Display::Poll();
-  Log::Poll();
-  Pumps::Poll();
-  PollLights();
+  Display::poll();
+  Log::poll();
+  Pumps::poll();
+  pollLights();
 
   HEARTBEAT;
   delay(500); // ms
 }
 
-void FatalError(const char* message) {
+void fatalError(const char* message) {
   // activate red light & alarm buzzer
   digitalWrite(PIN_BUZZER, HIGH);
   digitalWrite(PIN_LIGHT_ALARM, HIGH);
   
-  Log::LogString(Log::FATAL, message);
-  Display::ShowError(message); // display error on LCD
+  Log::logString(Log::FATAL, message);
+  Display::showError(message); // display error on LCD
 
   // wait for watchdog to reset us (no heartbeat!) while drawing attention
   while (true) {
