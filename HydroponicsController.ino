@@ -25,13 +25,6 @@ static const Deck g_deckList[] = {
 };
 static_assert(sizeof(g_deckList) > 0, "Must have at least one deck");
 
-// TODO refactor for multiple decks
-#define LIGHT_HOURS 14
-#define SOLAR_NOON 13 // 1300 / 1pm (center of 9-5 working day)
-#define SUNRISE (SOLAR_NOON - LIGHT_HOURS/2) // ignoring underflow risk
-#define SUNSET (SUNRISE + LIGHT_HOURS)
-#define LIGHT_OUTLET  1
-
 #define LOG_INTERVAL_MINUTES 5
 
 // pinout definitions
@@ -101,6 +94,12 @@ public:
   static uint32_t getNextEvent(uint8_t index);
 };
 
+class Lights {
+public:
+  static void init();
+  static void poll();
+};
+
 RTC_DS3231 g_rtc;
 DHT g_dht(PIN_DHT, DHT22);
 
@@ -115,25 +114,6 @@ void pollSensorState() {
   // DHT updates about once every 2 seconds, and update takes 250ms. (otherwise it does nothing, seemingly)
   g_airTemp = g_dht.readTemperature();
   g_airHumidity = g_dht.readHumidity();
-}
-
-void pollLights() {
-  static bool lightsOn = false;
-
-  uint8_t hour = g_now.hour();
-  if (lightsOn) {
-    if (hour < SUNRISE || hour >= SUNSET) {
-      lightsOn = false;
-      Log::logString(Log::info, "Sunset");
-      setOutlet(LIGHT_OUTLET, lightsOn);
-    }
-  } else {
-    if (hour >= SUNRISE && hour < SUNSET) {
-      lightsOn = true;
-      Log::logString(Log::info, "Sunrise");
-      setOutlet(LIGHT_OUTLET, lightsOn);
-    }
-  }
 }
 
 void setOutlet(int number, bool on) {
@@ -197,6 +177,7 @@ void setup() {
   delay(500); // come to our senses and get a sane time
   HEARTBEAT;
   g_now = g_rtc.now();
+  Lights::init();
   Pumps::init();
   
   Log::logString(Log::warn, "RESET");
@@ -219,8 +200,8 @@ void loop() {
   
   Display::poll();
   Log::poll();
+  Lights::poll();
   Pumps::poll();
-  pollLights();
 
   HEARTBEAT;
   delay(500); // ms
