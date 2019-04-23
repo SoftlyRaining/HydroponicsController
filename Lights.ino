@@ -12,7 +12,7 @@
     
     if (lightOn[i] != shouldBeOn) {
       lightOn[i] = shouldBeOn;
-      Log::logString(Log::info, shouldBeOn ? "Sunrise" : "Sunset");
+      Log::logString(Log::info, (shouldBeOn ? "Sunrise #" : "Sunset #") + String(g_deckList[i].id));
       setOutlet(g_deckList[i].lightOutlet, shouldBeOn);
     }
   }
