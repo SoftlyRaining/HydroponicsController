@@ -20,8 +20,8 @@ struct Deck {
 };
 
 static const Deck g_deckList[] = {
-  {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 6 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
-  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 6 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
+  {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
+  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
 };
 static_assert(sizeof(g_deckList) > 0, "Must have at least one deck");
 

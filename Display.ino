@@ -62,9 +62,15 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
 
   // update check engine light
   digitalWrite(PIN_LIGHT_ALARM, Log::haveSeenError() ? HIGH : LOW);
-  
-  // update LCD always
-  update();
+
+  // update LCD
+  static uint32_t refreshInterval = 5; // in seconds. (rate limited to reduce flicker)
+  static uint32_t lastRefresh = 0;
+  uint32_t now = g_now.unixtime();
+  if (now - lastRefresh >= refreshInterval) {
+    lastRefresh = now;
+    update();
+  }
 }
 
 /*static*/ void Display::showError(const char* message) {
@@ -91,7 +97,7 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
     g_lcd.print(Pumps::getCurrentCycle(deckIndex));
   };
 
-  g_lcd.setCursor(0,0);
+  g_lcd.clear();
   displayTrayInfo(0);
   g_lcd.print("  ");
   displayTrayInfo(1);
@@ -106,5 +112,5 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
   g_lcd.print((int) g_airHumidity, DEC);
   g_lcd.print("% ");
   g_lcd.print((int) g_airTemp, DEC);
-  g_lcd.print("C  ");
+  g_lcd.print("C");
 }
