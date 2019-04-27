@@ -23,7 +23,8 @@ static const Deck g_deckList[] = {
   {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
   {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 3 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
 };
-static_assert(sizeof(g_deckList) > 0, "Must have at least one deck");
+static const uint8_t deckCount = sizeof(g_deckList) / sizeof(Deck);
+static_assert(deckCount > 0, "Must have at least one deck");
 
 #define LOG_INTERVAL_MINUTES 5
 
@@ -118,6 +119,8 @@ void pollSensorState() {
 
 void setOutlet(int number, bool on) {
   Log::logString(Log::info, "Setting outlet " + String(number) + " = " + String(on));
+  if (number < 1 || number > 8)
+    fatalError("bad outlet #");
   static const int pinMap[8] = {
     PIN_OUTLET_1,
     PIN_OUTLET_2,

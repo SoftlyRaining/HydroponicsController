@@ -47,10 +47,10 @@ private:
   uint32_t nextCycleTimestamp;
 };
 
-static PumpSchedule* PumpSchedules[sizeof(g_deckList)];
+static PumpSchedule* PumpSchedules[deckCount];
 
 /*static*/ void Pumps::init() {
-  for (int i=0; i < sizeof(g_deckList); i++)
+  for (int i=0; i < deckCount; i++)
     PumpSchedules[i] = new PumpSchedule(g_deckList[i]); // lives until shutdown - we never deallocate.
 }
 
@@ -94,7 +94,7 @@ enum State {
   if (g_now.unixtime() < stateChangeTime)
     return;
   
-  currentState = (currentState + 1) % stateCount;
+  currentState = static_cast<State>((currentState + 1) % stateCount);
   
   switch (currentState) {
     case wait:
