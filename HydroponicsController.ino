@@ -19,9 +19,13 @@ struct Deck {
   const uint8_t drainMinutes;
 };
 
+// actual timing:
+// deck 1   5 minute flood    5 minute drain
+// deck 2   5 minute flood    10 minute drain
+// deck 1 drains back fast enough for deck 2 to start immediately, thus "0" drainminutes for deck 1
 static const Deck g_deckList[] = {
-  {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 2 /*floodCycles*/, 4 /*floodMinutes*/, 0 /*drainMinutes*/},
-  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 2 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
+  {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 2 /*floodCycles*/, 5 /*floodMinutes*/, 0 /*drainMinutes*/},
+  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 2 /*floodCycles*/, 5 /*floodMinutes*/, 10 /*drainMinutes*/},
 };
 static const uint8_t deckCount = sizeof(g_deckList) / sizeof(Deck);
 static_assert(deckCount > 0, "Must have at least one deck");
@@ -137,7 +141,7 @@ void setOutlet(int number, bool on) {
 void setup() {
   // enable watchdog timer
   HEARTBEAT;
-  wdt_enable(WDTO_2S); // 2 seconds
+  //wdt_enable(WDTO_2S); // 2 seconds
 
   // configure pins
   HEARTBEAT;
@@ -182,32 +186,33 @@ void setup() {
   g_now = g_rtc.now();
   Lights::init();
   Pumps::init();
-  
-  Log::logString(Log::warn, "RESET");
-#ifdef SCHEDULE_TEST
-  Log::logString(Log::warn, "Schedule test enabled.");
-#endif
+
+  //lights on
+  setOutlet(1, true);
+  setOutlet(3, true);
 }
 
 void loop() {
-  HEARTBEAT;
+  auto setPumps = [](bool deck1, bool deck2) {
+     setOutlet(2, deck1);
+     setOutlet(4, deck2);
+  };
 
-  // update clock time
-#ifdef SCHEDULE_TEST
-  g_now = g_now + TimeSpan(MINUTE); // fast forward - one minute per tick
-#else  
-  g_now = g_rtc.now();
-#endif
+  setPumps(true, false);
+  //Display::showError("Hello World 1");
+  delay(5000);
   
-  pollSensorState();
+  setPumps(false, false);
+  //Display::showError("Hello World 2");
+  delay(5000);
   
-  Display::poll();
-  Log::poll();
-  Lights::poll();
-  Pumps::poll();
-
-  HEARTBEAT;
-  delay(500); // ms
+  setPumps(false, true);
+  //Display::showError("Hello World 2");
+  delay(5000);
+  
+  setPumps(false, false);
+  //Display::showError("Hello World 2");
+  delay(5000);
 }
 
 void fatalError(const char* message) {
