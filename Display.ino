@@ -97,6 +97,10 @@ LiquidCrystal g_lcd(PIN_LCD_RS, PIN_LCD_EN, PIN_LCD_D4, PIN_LCD_D5, PIN_LCD_D6, 
     g_lcd.print(Pumps::getCurrentCycle(deckIndex));
   };
 
+  
+  // 16x2 display area
+  g_lcd.begin(16, 2); // HACK HACK HACK try to reset lcd in case noise from pumps has scrambled it
+
   g_lcd.clear();
   displayTrayInfo(0);
   g_lcd.print("  ");
