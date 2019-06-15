@@ -21,7 +21,7 @@ struct Deck {
 
 static const Deck g_deckList[] = {
   {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 4 /*floodCycles*/, 4 /*floodMinutes*/, 0 /*drainMinutes*/},
-  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 2 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
+  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 4 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
 };
 static const uint8_t deckCount = sizeof(g_deckList) / sizeof(Deck);
 static_assert(deckCount > 0, "Must have at least one deck");
