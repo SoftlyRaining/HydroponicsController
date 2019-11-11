@@ -4,6 +4,7 @@
 
 // configuration
 //#define SCHEDULE_TEST // if defined, the clock will be greatly sped up
+//#define SET_TIME_OVERRIDE // if defined, it will set the clock and stop.
 
 struct Deck {
   const int id;
@@ -20,8 +21,8 @@ struct Deck {
 };
 
 static const Deck g_deckList[] = {
-  {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 4 /*floodCycles*/, 4 /*floodMinutes*/, 0 /*drainMinutes*/},
-  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 14 * HOUR /*lightDuration*/, 8 * HOUR /*sunriseTime*/, 4 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
+  {1 /*id*/, 1 /*lightOutlet*/, 2 /*pumpOutlet*/, 13 * HOUR /*lightDuration*/, 9 * HOUR /*sunriseTime*/, 4 /*floodCycles*/, 4 /*floodMinutes*/, 0 /*drainMinutes*/},
+  {2 /*id*/, 3 /*lightOutlet*/, 4 /*pumpOutlet*/, 13 * HOUR /*lightDuration*/, 9 * HOUR /*sunriseTime*/, 4 /*floodCycles*/, 5 /*floodMinutes*/, 5 /*drainMinutes*/},
 };
 static const uint8_t deckCount = sizeof(g_deckList) / sizeof(Deck);
 static_assert(deckCount > 0, "Must have at least one deck");
@@ -134,7 +135,7 @@ void setOutlet(int number, bool on) {
   digitalWrite(pinMap[number-1], on ? LOW : HIGH);
 }
 
-void setup() {
+void setup() {  
   // enable watchdog timer
   HEARTBEAT;
   wdt_enable(WDTO_2S); // 2 seconds
@@ -175,9 +176,14 @@ void setup() {
   HEARTBEAT;
   Display::init();
   Log::init();
+  
   if (!g_rtc.begin())
     fatalError("begin RTC error");
+#ifdef SET_TIME_OVERRIDE
+  g_rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+#endif
   delay(500); // come to our senses and get a sane time
+  
   HEARTBEAT;
   g_now = g_rtc.now();
   Lights::init();
