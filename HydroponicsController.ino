@@ -31,8 +31,8 @@ static_assert(deckCount > 0, "Must have at least one deck");
 // pinout definitions
 #define PIN_LIGHT_HEARTBEAT   LED_BUILTIN
 
-#define PIN_OUTLET_1          2
-#define PIN_OUTLET_2          3
+static const int g_outletPins[] = {2, 3};
+static const uint8_t outletCount = sizeof(g_outletPins) / sizeof(int);
 
 // includes
 #include <avr/wdt.h>
@@ -89,13 +89,9 @@ DateTime g_now;
 
 void setOutlet(int number, bool on) {
   Log::logString(Log::info, "Setting outlet " + String(number) + " = " + String(on));
-  if (number < 1 || number > 8)
+  if (number < 1 || number > outletCount)
     fatalError("bad outlet #");
-  static const int pinMap[8] = {
-    PIN_OUTLET_1,
-    PIN_OUTLET_2,
-  };
-  digitalWrite(pinMap[number-1], on ? LOW : HIGH);
+  digitalWrite(g_outletPins[number-1], on ? LOW : HIGH);
 }
 
 void setup() {  
@@ -106,11 +102,11 @@ void setup() {
   // configure pins
   HEARTBEAT;
   pinMode(PIN_LIGHT_HEARTBEAT, OUTPUT);
-  pinMode(PIN_OUTLET_1, OUTPUT);
-  pinMode(PIN_OUTLET_2, OUTPUT);
-
-  digitalWrite(PIN_OUTLET_1, HIGH); // high means relay off
-  digitalWrite(PIN_OUTLET_2, HIGH);
+  for (int i=0; i < outletCount; i++)
+  {
+    pinMode(g_outletPins[i], OUTPUT);
+    digitalWrite(g_outletPins[i], HIGH); // high means relay off
+  }
 
   // initialize hardware, modules
   HEARTBEAT;
