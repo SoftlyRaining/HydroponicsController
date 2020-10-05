@@ -1,14 +1,8 @@
-#include <SPI.h> // used by SD.h
-#include <SD.h>
-
 bool lastSerialState = false;
 bool Log::errorSeen = false;
 
 /*static*/ void Log::init() {
   Serial.begin(9600);
-
-  if (!SD.begin(PIN_SD_CHIPSELECT))
-    fatalError("SD card fail");
 }
 
 /*static*/ void Log::poll() {
@@ -22,8 +16,7 @@ bool Log::errorSeen = false;
 }
 
 /*static*/ void Log::update() {
-  String message = "Humidity: " + String(g_airHumidity, 0) + "% Temp:" + String(g_airTemp, 0) + "C";
-  logString(Log::info, message);
+  logString(Log::info, "-");
 }
 
 /*static*/ void Log::logString(Log::Level level, String message) {
@@ -38,17 +31,5 @@ bool Log::errorSeen = false;
     Serial.print(date);
     Serial.print(time);
     Serial.println(message);
-  }
-  
-  File logFile = SD.open("log.txt", FILE_WRITE);
-  if (!logFile) {
-    Serial.println("error opening log on SD");
-    Display::showError("SD log error"); // TODO this junks up the display when execution continues b/c normal display doesn't use clear. On the bright side, you can tell it happened even hours later...
-  } else {
-    logFile.print(levelStrings[level]);
-    logFile.print(date);
-    logFile.print(time);
-    logFile.println(message);
-    logFile.close();
   }
 }
